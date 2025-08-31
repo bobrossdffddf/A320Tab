@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(220, 40%, 8%);
+  --foreground: hsl(0, 0%, 95%);
+  --card: hsl(220, 45%, 12%);
+  --card-foreground: hsl(0, 0%, 95%);
+  --popover: hsl(220, 45%, 12%);
+  --popover-foreground: hsl(0, 0%, 95%);
+  --primary: hsl(180, 95%, 45%);
+  --primary-foreground: hsl(220, 45%, 12%);
+  --secondary: hsl(220, 20%, 25%);
+  --secondary-foreground: hsl(0, 0%, 95%);
+  --muted: hsl(220, 20%, 20%);
+  --muted-foreground: hsl(0, 0%, 70%);
+  --accent: hsl(180, 95%, 45%);
+  --accent-foreground: hsl(220, 45%, 12%);
+  --destructive: hsl(0, 75%, 55%);
+  --destructive-foreground: hsl(0, 0%, 95%);
+  --border: hsl(220, 20%, 25%);
+  --input: hsl(220, 20%, 25%);
+  --ring: hsl(180, 95%, 45%);
+  --chart-1: hsl(180, 95%, 45%);
+  --chart-2: hsl(220, 45%, 65%);
+  --chart-3: hsl(280, 65%, 60%);
+  --chart-4: hsl(40, 85%, 55%);
+  --chart-5: hsl(120, 60%, 50%);
+  --sidebar: hsl(220, 45%, 12%);
+  --sidebar-foreground: hsl(0, 0%, 95%);
+  --sidebar-primary: hsl(180, 95%, 45%);
+  --sidebar-primary-foreground: hsl(220, 45%, 12%);
+  --sidebar-accent: hsl(180, 95%, 45%);
+  --sidebar-accent-foreground: hsl(220, 45%, 12%);
+  --sidebar-border: hsl(220, 20%, 25%);
+  --sidebar-ring: hsl(180, 95%, 45%);
+  --font-sans: 'Inter', ui-sans-serif, system-ui;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --radius: 8px;
+}
+
+.dark {
+  --background: hsl(220, 40%, 8%);
+  --foreground: hsl(0, 0%, 95%);
+  --card: hsl(220, 45%, 12%);
+  --card-foreground: hsl(0, 0%, 95%);
+  --popover: hsl(220, 45%, 12%);
+  --popover-foreground: hsl(0, 0%, 95%);
+  --primary: hsl(180, 95%, 45%);
+  --primary-foreground: hsl(220, 45%, 12%);
+  --secondary: hsl(220, 20%, 25%);
+  --secondary-foreground: hsl(0, 0%, 95%);
+  --muted: hsl(220, 20%, 20%);
+  --muted-foreground: hsl(0, 0%, 70%);
+  --accent: hsl(180, 95%, 45%);
+  --accent-foreground: hsl(220, 45%, 12%);
+  --destructive: hsl(0, 75%, 55%);
+  --destructive-foreground: hsl(0, 0%, 95%);
+  --border: hsl(220, 20%, 25%);
+  --input: hsl(220, 20%, 25%);
+  --ring: hsl(180, 95%, 45%);
+  --chart-1: hsl(180, 95%, 45%);
+  --chart-2: hsl(220, 45%, 65%);
+  --chart-3: hsl(280, 65%, 60%);
+  --chart-4: hsl(40, 85%, 55%);
+  --chart-5: hsl(120, 60%, 50%);
+  --sidebar: hsl(220, 45%, 12%);
+  --sidebar-foreground: hsl(0, 0%, 95%);
+  --sidebar-primary: hsl(180, 95%, 45%);
+  --sidebar-primary-foreground: hsl(220, 45%, 12%);
+  --sidebar-accent: hsl(180, 95%, 45%);
+  --sidebar-accent-foreground: hsl(220, 45%, 12%);
+  --sidebar-border: hsl(220, 20%, 25%);
+  --sidebar-ring: hsl(180, 95%, 45%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: var(--font-sans);
+  }
+}
+
+.aircraft-diagram {
+  background: linear-gradient(45deg, hsl(220, 45%, 12%) 0%, hsl(220, 40%, 15%) 100%);
+}
+
+.status-indicator {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.chat-bubble {
+  max-width: 85%;
+}
+
+.sidebar-collapsed {
+  width: 60px;
+}
+
+.sidebar-expanded {
+  width: 250px;
+}
+
+.grid-pattern {
+  background-image: radial-gradient(circle, hsl(180, 95%, 45%) 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0.1;
+}
+
+.aircraft-seat {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.aircraft-seat:hover {
+  transform: scale(1.1);
+}
+
+.aircraft-seat.occupied {
+  background-color: hsl(0, 75%, 55%);
+}
+
+.aircraft-seat.available {
+  background-color: hsl(120, 60%, 50%);
+}
+
+.aircraft-seat.selected {
+  background-color: hsl(40, 85%, 55%);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(220, 20%, 20%);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(220, 20%, 40%);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(180, 95%, 45%);
+}
