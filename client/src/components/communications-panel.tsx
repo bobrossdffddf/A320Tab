@@ -118,7 +118,7 @@ export function CommunicationsPanel({ flightId }: CommunicationsPanelProps) {
       {/* Chat Messages */}
       <ScrollArea className="flex-1 mb-4" data-testid="container-chat-messages">
         <div className="space-y-3">
-          {communications?.map((communication: Communication) => (
+          {communications && Array.isArray(communications) ? communications.map((communication: Communication) => (
             <div
               key={communication.id}
               className={cn(
@@ -139,7 +139,7 @@ export function CommunicationsPanel({ flightId }: CommunicationsPanelProps) {
               </div>
               <p className="text-sm">{communication.message}</p>
             </div>
-          ))}
+          )) : null}
         </div>
       </ScrollArea>
       

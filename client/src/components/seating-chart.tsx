@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
+import { AircraftConfig } from "./aircraft-config";
 import type { Aircraft, Flight, SeatingData } from "@shared/schema";
 
 interface SeatingChartProps {
@@ -37,7 +38,8 @@ export function SeatingChart({ flight, aircraft }: SeatingChartProps) {
   });
 
   const getSeatStatus = (seatNumber: string): string => {
-    const seat = seatingData?.find((s: SeatingData) => s.seatNumber === seatNumber);
+    if (!seatingData || !Array.isArray(seatingData)) return "available";
+    const seat = seatingData.find((s: SeatingData) => s.seatNumber === seatNumber);
     return seat?.status || "available";
   };
 
@@ -62,8 +64,10 @@ export function SeatingChart({ flight, aircraft }: SeatingChartProps) {
 
   // Generate seat layout based on aircraft configuration
   const generateSeats = () => {
-    const seats = [];
-    const config = aircraft?.configuration?.seatingLayout;
+    const seats: JSX.Element[] = [];
+    const config = aircraft?.configuration && typeof aircraft.configuration === 'object' && aircraft.configuration !== null 
+      ? (aircraft.configuration as any).seatingLayout 
+      : null;
     
     if (!config) return seats;
 
@@ -105,8 +109,10 @@ export function SeatingChart({ flight, aircraft }: SeatingChartProps) {
   };
 
   const generateEconomySeats = () => {
-    const seats = [];
-    const config = aircraft?.configuration?.seatingLayout;
+    const seats: JSX.Element[] = [];
+    const config = aircraft?.configuration && typeof aircraft.configuration === 'object' && aircraft.configuration !== null 
+      ? (aircraft.configuration as any).seatingLayout 
+      : null;
     
     if (!config?.economy) return seats;
 
@@ -145,7 +151,7 @@ export function SeatingChart({ flight, aircraft }: SeatingChartProps) {
   };
 
   const totalSeats = 162;
-  const occupiedSeats = seatingData?.filter((s: SeatingData) => s.status === "occupied").length || 136;
+  const occupiedSeats = seatingData && Array.isArray(seatingData) ? seatingData.filter((s: SeatingData) => s.status === "occupied").length : 136;
   const availableSeats = totalSeats - occupiedSeats;
   const loadFactor = Math.round((occupiedSeats / totalSeats) * 100);
 
@@ -156,7 +162,11 @@ export function SeatingChart({ flight, aircraft }: SeatingChartProps) {
           <CardTitle className="text-lg font-semibold" data-testid="text-seating-title">
             Passenger Seating - {aircraft?.type || "Boeing 737-800"}
           </CardTitle>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <AircraftConfig onConfigSave={(config) => {
+              console.log("New aircraft configuration:", config);
+              // Here you would typically save the configuration to your backend
+            }} />
             <div className="flex items-center space-x-2 text-sm">
               <div className="w-3 h-3 bg-chart-5 rounded aircraft-seat"></div>
               <span>Available</span>
@@ -175,7 +185,7 @@ export function SeatingChart({ flight, aircraft }: SeatingChartProps) {
       
       <CardContent>
         {/* Aircraft Cabin Layout */}
-        <div className="bg-muted rounded-lg p-6 overflow-x-auto" data-testid="container-seating-chart">
+        <div className="bg-muted rounded-lg p-3 sm:p-6 overflow-x-auto" data-testid="container-seating-chart">
           <div className="aircraft-cabin min-w-max">
             <div className="space-y-8">
               {/* First Class */}
@@ -198,27 +208,27 @@ export function SeatingChart({ flight, aircraft }: SeatingChartProps) {
         </div>
         
         {/* Passenger Summary */}
-        <div className="grid grid-cols-4 gap-4 mt-4">
-          <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="font-mono text-xl font-semibold" data-testid="text-total-passengers">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mt-4">
+          <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
+            <div className="font-mono text-lg sm:text-xl font-semibold" data-testid="text-total-passengers">
               {totalSeats}
             </div>
             <div className="text-xs text-muted-foreground">Total PAX</div>
           </div>
-          <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="font-mono text-xl font-semibold text-chart-5" data-testid="text-available-seats">
+          <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
+            <div className="font-mono text-lg sm:text-xl font-semibold text-chart-5" data-testid="text-available-seats">
               {availableSeats}
             </div>
             <div className="text-xs text-muted-foreground">Available</div>
           </div>
-          <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="font-mono text-xl font-semibold text-destructive" data-testid="text-occupied-seats">
+          <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
+            <div className="font-mono text-lg sm:text-xl font-semibold text-destructive" data-testid="text-occupied-seats">
               {occupiedSeats}
             </div>
             <div className="text-xs text-muted-foreground">Occupied</div>
           </div>
-          <div className="text-center p-3 bg-muted rounded-lg">
-            <div className="font-mono text-xl font-semibold" data-testid="text-load-factor">
+          <div className="text-center p-2 sm:p-3 bg-muted rounded-lg">
+            <div className="font-mono text-lg sm:text-xl font-semibold" data-testid="text-load-factor">
               {loadFactor}%
             </div>
             <div className="text-xs text-muted-foreground">Load Factor</div>

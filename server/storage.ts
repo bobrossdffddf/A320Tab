@@ -167,6 +167,7 @@ export class MemStorage implements IStorage {
     const aircraft: Aircraft = {
       ...insertAircraft,
       id,
+      status: insertAircraft.status || "active",
       createdAt: new Date(),
     };
     this.aircraft.set(id, aircraft);
@@ -200,6 +201,12 @@ export class MemStorage implements IStorage {
     const flight: Flight = {
       ...insertFlight,
       id,
+      status: insertFlight.status || "planning",
+      aircraftId: insertFlight.aircraftId || null,
+      scheduledDeparture: insertFlight.scheduledDeparture || null,
+      actualDeparture: insertFlight.actualDeparture || null,
+      passengerCount: insertFlight.passengerCount || 0,
+      fuelData: insertFlight.fuelData || null,
       createdAt: new Date(),
     };
     this.flights.set(id, flight);
@@ -233,6 +240,11 @@ export class MemStorage implements IStorage {
     const request: ServiceRequest = {
       ...insertRequest,
       id,
+      flightId: insertRequest.flightId || null,
+      status: insertRequest.status || "pending",
+      priority: insertRequest.priority || "normal",
+      assignedTo: insertRequest.assignedTo || null,
+      notes: insertRequest.notes || null,
       createdAt: new Date(),
       completedAt: null,
     };
@@ -270,6 +282,7 @@ export class MemStorage implements IStorage {
     const checklist: Checklist = {
       ...insertChecklist,
       id,
+      version: insertChecklist.version || "1.0",
     };
     this.checklists.set(id, checklist);
     return checklist;
@@ -302,6 +315,10 @@ export class MemStorage implements IStorage {
       const progress: ChecklistProgress = {
         ...insertProgress,
         id,
+        flightId: insertProgress.flightId || null,
+        checklistId: insertProgress.checklistId || null,
+        status: insertProgress.status || "pending",
+        completedItems: insertProgress.completedItems || [],
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -322,6 +339,7 @@ export class MemStorage implements IStorage {
     const communication: Communication = {
       ...insertCommunication,
       id,
+      flightId: insertCommunication.flightId || null,
       timestamp: new Date(),
       readBy: [],
     };
@@ -352,6 +370,9 @@ export class MemStorage implements IStorage {
       const seating: SeatingData = {
         ...insertSeating,
         id,
+        flightId: insertSeating.flightId || null,
+        status: insertSeating.status || "available",
+        passengerName: insertSeating.passengerName || null,
         updatedAt: new Date(),
       };
       this.seatingData.set(id, seating);
@@ -372,8 +393,17 @@ export class MemStorage implements IStorage {
       };
       this.seatingData.set(existing.id, updated);
       return updated;
+    } else {
+      // Create new seat if it doesn't exist
+      const newSeat = await this.createOrUpdateSeatingData({
+        flightId,
+        seatNumber,
+        status,
+        seatClass: "economy", // Default class
+        passengerName: passengerName || null,
+      });
+      return newSeat;
     }
-    return undefined;
   }
 
   // Airport operations
@@ -390,7 +420,11 @@ export class MemStorage implements IStorage {
   }
 
   async createAirport(insertAirport: InsertAirport): Promise<Airport> {
-    const airport: Airport = { ...insertAirport };
+    const airport: Airport = { 
+      ...insertAirport,
+      iata: insertAirport.iata || null,
+      isPtfsSupported: insertAirport.isPtfsSupported || true,
+    };
     this.airports.set(airport.icao, airport);
     return airport;
   }

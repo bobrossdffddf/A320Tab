@@ -9,12 +9,14 @@ interface FuelManagementProps {
 }
 
 export function FuelManagement({ flight }: FuelManagementProps) {
-  const fuelData = flight?.fuelData || {
-    leftWing: 5746,
-    center: 8540,
-    rightWing: 5746,
-    total: 20032
-  };
+  const fuelData = flight?.fuelData && typeof flight.fuelData === 'object' && flight.fuelData !== null 
+    ? flight.fuelData as any
+    : {
+        leftWing: 5746,
+        center: 8540,
+        rightWing: 5746,
+        total: 20032
+      };
 
   const maxCapacity = 26000; // Example max capacity
 

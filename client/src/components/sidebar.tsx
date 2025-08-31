@@ -96,9 +96,9 @@ export function Sidebar({ collapsed, onToggle, currentFlight }: SidebarProps) {
       <nav className="flex-1 p-4 space-y-2">
         {navItems.map((item) => (
           <Link key={item.href} href={item.href}>
-            <a
+            <div
               className={cn(
-                "flex items-center space-x-3 p-3 rounded-lg transition-colors",
+                "flex items-center space-x-3 p-3 rounded-lg transition-colors cursor-pointer",
                 item.active
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
                   : "hover:bg-sidebar-accent/10 text-sidebar-foreground hover:text-sidebar-accent"
@@ -109,7 +109,7 @@ export function Sidebar({ collapsed, onToggle, currentFlight }: SidebarProps) {
               {!collapsed && (
                 <span className="text-sm font-medium">{item.label}</span>
               )}
-            </a>
+            </div>
           </Link>
         ))}
       </nav>

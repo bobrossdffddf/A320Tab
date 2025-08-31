@@ -109,7 +109,7 @@ export function ServiceStatus({ flightId }: ServiceStatusProps) {
     { type: "ground_power", name: "Ground Power", status: "completed" },
   ];
 
-  const serviceData = services?.length ? services : defaultServices;
+  const serviceData = services && Array.isArray(services) && services.length > 0 ? services : defaultServices;
 
   return (
     <Card className="bg-card border-border">
@@ -120,7 +120,7 @@ export function ServiceStatus({ flightId }: ServiceStatusProps) {
       </CardHeader>
       
       <CardContent className="space-y-3">
-        {serviceData.map((service: any, index: number) => {
+        {Array.isArray(serviceData) ? serviceData.map((service: any, index: number) => {
           const IconComponent = getServiceIcon(service.serviceType || service.type);
           const status = service.status;
           const isInProgress = status === "in_progress";
@@ -158,7 +158,7 @@ export function ServiceStatus({ flightId }: ServiceStatusProps) {
               </Badge>
             </div>
           );
-        })}
+        }) : null}
         
         <Button 
           className="w-full bg-accent text-accent-foreground hover:bg-accent/90"

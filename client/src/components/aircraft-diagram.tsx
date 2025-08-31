@@ -10,7 +10,7 @@ interface AircraftDiagramProps {
 }
 
 export function AircraftDiagram({ aircraft, flight }: AircraftDiagramProps) {
-  const servicePoints = aircraft?.configuration?.servicePoints || [];
+  const servicePoints = aircraft?.configuration && typeof aircraft.configuration === 'object' && aircraft.configuration !== null ? (aircraft.configuration as any).servicePoints || [] : [];
 
   return (
     <Card className="bg-card border-border aircraft-diagram">

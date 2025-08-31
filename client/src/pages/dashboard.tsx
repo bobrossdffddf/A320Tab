@@ -18,14 +18,14 @@ export default function Dashboard() {
   const [selectedAirport, setSelectedAirport] = useState("KLAX");
   
   const { data: airports } = useQuery({
-    queryKey: ["/api/airports", { ptfsOnly: true }],
+    queryKey: ["/api/airports?ptfsOnly=true"],
   });
 
   const { data: flights } = useQuery({
     queryKey: ["/api/flights"],
   });
 
-  const currentFlight = flights?.[0]; // Get the first flight for demo
+  const currentFlight = flights && Array.isArray(flights) ? flights[0] : undefined;
   
   const { aircraft, isLoading } = useAircraft(currentFlight?.aircraftId);
 
@@ -66,39 +66,40 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className="bg-card border-b border-border p-4 flex items-center justify-between" data-testid="header-topbar">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-semibold" data-testid="text-page-title">Ground Operations</h1>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <i className="fas fa-calendar"></i>
+        <header className="bg-card border-b border-border p-3 sm:p-4 flex items-center justify-between flex-wrap gap-2" data-testid="header-topbar">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <h1 className="text-lg sm:text-xl font-semibold" data-testid="text-page-title">Ground Operations</h1>
+            <div className="hidden sm:flex items-center space-x-2 text-sm text-muted-foreground">
               <span data-testid="text-current-date">{getCurrentDate()}</span>
               <span className="mx-2">|</span>
               <span className="font-mono" data-testid="text-current-time">{getCurrentTime()}</span>
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             {/* Airport Selector */}
             <Select value={selectedAirport} onValueChange={setSelectedAirport}>
-              <SelectTrigger className="w-48" data-testid="select-airport">
+              <SelectTrigger className="w-32 sm:w-48" data-testid="select-airport">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {airports?.map((airport) => (
+                {airports && Array.isArray(airports) ? airports.map((airport: any) => (
                   <SelectItem key={airport.icao} value={airport.icao}>
-                    {airport.icao} - {airport.name}
+                    <span className="sm:hidden">{airport.icao}</span>
+                    <span className="hidden sm:inline">{airport.icao} - {airport.name}</span>
                   </SelectItem>
-                ))}
+                )) : null}
               </SelectContent>
             </Select>
             
             {/* Status Indicators */}
-            <div className="flex items-center space-x-3">
-              <Badge variant="outline" className="bg-chart-5/20 text-chart-5 border-chart-5">
-                <div className="w-2 h-2 bg-chart-5 rounded-full mr-2 status-indicator"></div>
-                ONLINE
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <Badge variant="outline" className="bg-chart-5/20 text-chart-5 border-chart-5 text-xs">
+                <div className="w-2 h-2 bg-chart-5 rounded-full mr-1 sm:mr-2 status-indicator"></div>
+                <span className="hidden sm:inline">ONLINE</span>
+                <span className="sm:hidden">ON</span>
               </Badge>
-              <div className="flex items-center space-x-1">
+              <div className="hidden sm:flex items-center space-x-1">
                 <Wifi className="h-4 w-4 text-chart-5" />
                 <span className="text-xs font-mono">100%</span>
               </div>
@@ -109,11 +110,11 @@ export default function Dashboard() {
         {/* Main Dashboard */}
         <div className="flex-1 flex overflow-hidden">
           {/* Central Content */}
-          <div className="flex-1 flex flex-col p-6 space-y-6 overflow-y-auto">
+          <div className="flex-1 flex flex-col p-3 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto">
             {/* Aircraft Overview Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
               {/* Aircraft Diagram */}
-              <div className="lg:col-span-2">
+              <div className="xl:col-span-2">
                 <AircraftDiagram 
                   aircraft={aircraft} 
                   flight={currentFlight}
@@ -125,11 +126,11 @@ export default function Dashboard() {
             </div>
             
             {/* Fuel and Weight Management */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <FuelManagement flight={currentFlight} />
               
               {/* Weight & Balance */}
-              <div className="bg-card rounded-xl border border-border p-6">
+              <div className="bg-card rounded-xl border border-border p-4 sm:p-6">
                 <h3 className="text-lg font-semibold mb-4">Weight & Balance</h3>
                 <div className="space-y-4">
                   {/* Weight Breakdown */}
@@ -182,7 +183,7 @@ export default function Dashboard() {
           </div>
           
           {/* Right Sidebar */}
-          <div className="w-80 bg-card border-l border-border flex flex-col">
+          <div className="hidden lg:flex w-80 xl:w-96 bg-card border-l border-border flex-col">
             <ChecklistPanel flightId={currentFlight?.id} aircraftType={aircraft?.type} />
             <CommunicationsPanel flightId={currentFlight?.id} />
           </div>
@@ -190,21 +191,29 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="fixed bottom-6 right-6 space-y-3">
+      <div className="fixed bottom-4 right-4 space-y-3 z-50">
         <Button 
           size="icon" 
-          className="w-12 h-12 rounded-full shadow-lg bg-accent text-accent-foreground hover:bg-accent/90"
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-lg bg-accent text-accent-foreground hover:bg-accent/90"
           data-testid="button-quick-atc"
         >
-          <Phone className="h-5 w-5" />
+          <Phone className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
         <Button 
           size="icon" 
-          className="w-12 h-12 rounded-full shadow-lg bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-lg bg-destructive text-destructive-foreground hover:bg-destructive/90"
           data-testid="button-emergency"
         >
-          <AlertTriangle className="h-5 w-5" />
+          <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
+      </div>
+
+      {/* Mobile Bottom Sheet for Right Sidebar Content */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 space-y-4 max-h-96 overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ChecklistPanel flightId={currentFlight?.id} aircraftType={aircraft?.type} />
+          <CommunicationsPanel flightId={currentFlight?.id} />
+        </div>
       </div>
     </div>
   );

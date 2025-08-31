@@ -17,7 +17,7 @@ interface ChecklistPanelProps {
 
 export function ChecklistPanel({ flightId, aircraftType }: ChecklistPanelProps) {
   const { data: checklists } = useQuery({
-    queryKey: ["/api/checklists", { aircraftType }],
+    queryKey: [`/api/checklists?aircraftType=${aircraftType}`],
     enabled: !!aircraftType,
   });
 
@@ -47,12 +47,14 @@ export function ChecklistPanel({ flightId, aircraftType }: ChecklistPanelProps) 
   });
 
   const getChecklistItems = (checklistId: string) => {
-    const checklist = checklists?.find((c: Checklist) => c.id === checklistId);
+    if (!checklists || !Array.isArray(checklists)) return [];
+    const checklist = checklists.find((c: Checklist) => c.id === checklistId);
     return checklist?.items || [];
   };
 
   const getChecklistProgress = (checklistId: string) => {
-    return progress?.find((p: ChecklistProgress) => p.checklistId === checklistId);
+    if (!progress || !Array.isArray(progress)) return undefined;
+    return progress.find((p: ChecklistProgress) => p.checklistId === checklistId);
   };
 
   const getCompletedItems = (checklistId: string): string[] => {
@@ -91,7 +93,7 @@ export function ChecklistPanel({ flightId, aircraftType }: ChecklistPanelProps) 
       </CardHeader>
       
       <CardContent className="p-0 space-y-3">
-        {checklists?.map((checklist: Checklist) => {
+        {checklists && Array.isArray(checklists) ? checklists.map((checklist: Checklist) => {
           const status = getChecklistStatus(checklist.id);
           const percentage = getCompletionPercentage(checklist.id);
           const items = getChecklistItems(checklist.id);
@@ -160,7 +162,7 @@ export function ChecklistPanel({ flightId, aircraftType }: ChecklistPanelProps) 
               )}
             </div>
           );
-        })}
+        }) : null}
       </CardContent>
     </div>
   );
