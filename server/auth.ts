@@ -10,8 +10,8 @@ if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
 passport.use(new DiscordStrategy({
   clientID: process.env.DISCORD_CLIENT_ID,
   clientSecret: process.env.DISCORD_CLIENT_SECRET,
-  callbackURL: process.env.NODE_ENV === 'production' 
-    ? 'https://your-app.replit.app/auth/discord/callback'
+  callbackURL: process.env.REPLIT_DEV_DOMAIN 
+    ? `https://${process.env.REPLIT_DEV_DOMAIN}/auth/discord/callback`
     : 'http://localhost:5000/auth/discord/callback',
   scope: ['identify'],
 }, async (accessToken, refreshToken, profile, done) => {
