@@ -3,6 +3,16 @@ import { pgTable, text, varchar, integer, real, boolean, timestamp, jsonb } from
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// User authentication
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  discordId: text("discord_id").notNull().unique(),
+  username: text("username").notNull(),
+  avatar: text("avatar"),
+  role: text("role").notNull().default("pilot"), // pilot, ground_crew, atc
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const aircraft = pgTable("aircraft", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   registration: text("registration").notNull().unique(),
@@ -152,3 +162,10 @@ export type InsertSeatingData = z.infer<typeof insertSeatingDataSchema>;
 
 export type Airport = typeof airports.$inferSelect;
 export type InsertAirport = z.infer<typeof insertAirportSchema>;
+
+export type User = typeof users.$inferSelect;
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertUser = z.infer<typeof insertUserSchema>;

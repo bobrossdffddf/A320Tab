@@ -6,11 +6,18 @@ import {
   type ChecklistProgress, type InsertChecklistProgress,
   type Communication, type InsertCommunication,
   type SeatingData, type InsertSeatingData,
-  type Airport, type InsertAirport
+  type Airport, type InsertAirport,
+  type User, type InsertUser
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
+  // User operations
+  getUserById(id: string): Promise<User | undefined>;
+  getUserByDiscordId(discordId: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, user: Partial<InsertUser>): Promise<User | undefined>;
+
   // Aircraft operations
   getAircraft(id: string): Promise<Aircraft | undefined>;
   getAllAircraft(): Promise<Aircraft[]>;
@@ -59,6 +66,7 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  private users: Map<string, User> = new Map();
   private aircraft: Map<string, Aircraft> = new Map();
   private flights: Map<string, Flight> = new Map();
   private serviceRequests: Map<string, ServiceRequest> = new Map();
@@ -70,6 +78,34 @@ export class MemStorage implements IStorage {
 
   constructor() {
     this.initializeDefaultData();
+  }
+
+  // User operations
+  async getUserById(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByDiscordId(discordId: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.discordId === discordId);
+  }
+
+  async createUser(userData: InsertUser): Promise<User> {
+    const user: User = {
+      id: randomUUID(),
+      ...userData,
+      createdAt: new Date(),
+    };
+    this.users.set(user.id, user);
+    return user;
+  }
+
+  async updateUser(id: string, userData: Partial<InsertUser>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    
+    const updatedUser = { ...user, ...userData };
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
 
   private initializeDefaultData() {

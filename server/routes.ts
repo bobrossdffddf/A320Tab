@@ -1,8 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
+import session from "express-session";
 import { storage } from "./storage";
 import { z } from "zod";
+import passport, { requireAuth, requireRole } from "./auth";
 import { 
   insertFlightSchema, 
   insertServiceRequestSchema, 
@@ -12,8 +14,65 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Aircraft routes
-  app.get("/api/aircraft", async (req, res) => {
+  // Session configuration
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+  }));
+
+  // Passport middleware
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // Authentication routes
+  app.get('/auth/discord', passport.authenticate('discord'));
+  
+  app.get('/auth/discord/callback', 
+    passport.authenticate('discord', { failureRedirect: '/login?error=auth_failed' }),
+    (req, res) => {
+      res.redirect('/');
+    }
+  );
+
+  app.post('/auth/logout', (req, res) => {
+    req.logout((err) => {
+      if (err) return res.status(500).json({ error: 'Logout failed' });
+      res.json({ success: true });
+    });
+  });
+
+  app.get('/api/auth/user', (req, res) => {
+    if (req.isAuthenticated()) {
+      res.json(req.user);
+    } else {
+      res.status(401).json({ error: 'Not authenticated' });
+    }
+  });
+
+  // ATC24 API integration
+  app.get('/api/atc24/aircraft', async (req, res) => {
+    try {
+      const response = await fetch('https://24data.ptfs.app/acft-data');
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch ATC24 aircraft data' });
+    }
+  });
+
+  app.get('/api/atc24/controllers', async (req, res) => {
+    try {
+      const response = await fetch('https://24data.ptfs.app/controllers');
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch ATC24 controllers' });
+    }
+  });
+  // Aircraft routes (protected)
+  app.get("/api/aircraft", requireAuth, async (req, res) => {
     try {
       const aircraft = await storage.getAllAircraft();
       res.json(aircraft);
@@ -22,7 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/aircraft/:id", async (req, res) => {
+  app.get("/api/aircraft/:id", requireAuth, async (req, res) => {
     try {
       const aircraft = await storage.getAircraft(req.params.id);
       if (!aircraft) {
@@ -34,8 +93,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Flight routes
-  app.get("/api/flights", async (req, res) => {
+  // Flight routes (protected)
+  app.get("/api/flights", requireAuth, async (req, res) => {
     try {
       const flights = await storage.getAllFlights();
       res.json(flights);
@@ -44,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/flights/:id", async (req, res) => {
+  app.get("/api/flights/:id", requireAuth, async (req, res) => {
     try {
       const flight = await storage.getFlight(req.params.id);
       if (!flight) {
@@ -56,7 +115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/flights", async (req, res) => {
+  app.post("/api/flights", requireAuth, async (req, res) => {
     try {
       const validatedData = insertFlightSchema.parse(req.body);
       const flight = await storage.createFlight(validatedData);
@@ -69,7 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/flights/:id", async (req, res) => {
+  app.patch("/api/flights/:id", requireAuth, async (req, res) => {
     try {
       const partialData = insertFlightSchema.partial().parse(req.body);
       const flight = await storage.updateFlight(req.params.id, partialData);
