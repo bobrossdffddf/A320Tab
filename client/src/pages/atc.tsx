@@ -40,29 +40,86 @@ export default function ATCPage() {
     { name: "ATIS", freq: "128.05", active: false },
   ];
 
-  const atcMessages = [
+  const [currentScenario, setCurrentScenario] = useState(0);
+  const [userResponse, setUserResponse] = useState("");
+  const [score, setScore] = useState(0);
+  const [scenarioComplete, setScenarioComplete] = useState(false);
+
+  const trainingScenarios = [
     {
       id: 1,
-      time: "14:32:15",
-      callsign: "LAX Tower",
-      message: "PTFS001, taxi to runway 24L via Alpha, Charlie",
-      type: "instruction"
+      title: "Ground Control - Pushback Request",
+      atcCall: "PTFS001, LAX Ground, pushback approved, face north, advise ready to taxi",
+      correctResponse: "Pushback approved, face north, will advise ready to taxi, PTFS001",
+      hints: ["Acknowledge pushback approval", "Confirm direction", "State you'll advise when ready"],
+      explanation: "Always acknowledge pushback clearance and confirm the direction you'll be facing."
     },
     {
       id: 2,
-      time: "14:31:45",
-      callsign: "PTFS001",
-      message: "Roger, taxi to 24L via Alpha, Charlie, PTFS001",
-      type: "pilot"
+      title: "Ground Control - Taxi Instructions",
+      atcCall: "PTFS001, taxi to runway 24L via Alpha, Charlie, hold short of runway 24L",
+      correctResponse: "Taxi to runway 24L via Alpha, Charlie, hold short 24L, PTFS001",
+      hints: ["Repeat the runway", "Confirm the taxi route", "Acknowledge hold short instruction"],
+      explanation: "Always read back runway assignments, taxi routes, and hold short instructions."
     },
     {
       id: 3,
-      time: "14:31:20",
-      callsign: "LAX Ground",
-      message: "PTFS001, pushback approved, contact ground when ready to taxi",
-      type: "instruction"
+      title: "Tower Control - Takeoff Clearance",
+      atcCall: "PTFS001, runway 24L, cleared for takeoff, fly heading 240, contact departure 120.9",
+      correctResponse: "Runway 24L, cleared for takeoff, heading 240, contact departure 120.9, PTFS001",
+      hints: ["Confirm runway", "Acknowledge takeoff clearance", "Read back heading and frequency"],
+      explanation: "Takeoff clearances must include runway confirmation and all assigned instructions."
     },
+    {
+      id: 4,
+      title: "Emergency - Engine Failure on Takeoff",
+      atcCall: "PTFS001, say intentions, emergency services standing by",
+      correctResponse: "PTFS001 declaring emergency, engine failure, requesting immediate return to land runway 24L",
+      hints: ["Declare emergency", "State the problem", "Request what you need"],
+      explanation: "In emergencies, clearly state the nature of the problem and your intentions."
+    },
+    {
+      id: 5,
+      title: "Approach Control - Vectors to Final",
+      atcCall: "PTFS001, turn left heading 180, descend and maintain 3000, expect vectors to ILS 24L approach",
+      correctResponse: "Left heading 180, descend and maintain 3000, expect vectors ILS 24L, PTFS001",
+      hints: ["Confirm the heading", "Read back altitude", "Acknowledge approach expectation"],
+      explanation: "Vector instructions require precise readback of headings and altitudes."
+    }
   ];
+
+  const handleResponseSubmit = () => {
+    const scenario = trainingScenarios[currentScenario];
+    const responseWords = userResponse.toLowerCase().split(' ');
+    const correctWords = scenario.correctResponse.toLowerCase().split(' ');
+    
+    // Simple scoring based on key words present
+    let matches = 0;
+    correctWords.forEach(word => {
+      if (responseWords.some(userWord => userWord.includes(word) || word.includes(userWord))) {
+        matches++;
+      }
+    });
+    
+    const scenarioScore = Math.round((matches / correctWords.length) * 100);
+    setScore(prevScore => prevScore + scenarioScore);
+    setScenarioComplete(true);
+  };
+
+  const nextScenario = () => {
+    if (currentScenario < trainingScenarios.length - 1) {
+      setCurrentScenario(currentScenario + 1);
+      setUserResponse("");
+      setScenarioComplete(false);
+    }
+  };
+
+  const resetTraining = () => {
+    setCurrentScenario(0);
+    setUserResponse("");
+    setScore(0);
+    setScenarioComplete(false);
+  };
 
   return (
     <div className="flex h-screen bg-background text-foreground">
@@ -201,67 +258,126 @@ export default function ATCPage() {
             </Card>
           </div>
 
-          {/* Communication Panel */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <TowerControl className="h-5 w-5 mr-2" />
-                ATC Communications
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Messages */}
-                <div className="bg-muted rounded-lg p-4 h-64 overflow-y-auto space-y-3">
-                  {atcMessages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`p-3 rounded-lg ${
-                        msg.type === "pilot"
-                          ? "bg-accent/50 ml-8"
-                          : "bg-background border mr-8"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-sm">{msg.callsign}</span>
-                        <span className="text-xs text-muted-foreground flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {msg.time}
-                        </span>
-                      </div>
-                      <p className="text-sm">{msg.message}</p>
+          {/* ATC Training Simulator */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Scenario Panel */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center">
+                    <TowerControl className="h-5 w-5 mr-2" />
+                    ATC Training Simulator
+                  </span>
+                  <Badge variant="outline" className="font-mono">
+                    Scenario {currentScenario + 1}/{trainingScenarios.length}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-medium mb-2">{trainingScenarios[currentScenario].title}</h4>
+                  <div className="bg-background border border-border rounded-lg p-3">
+                    <div className="flex items-center mb-2">
+                      <Badge variant="destructive" className="text-xs mr-2">ATC</Badge>
+                      <span className="text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3 mr-1 inline" />
+                        {new Date().toLocaleTimeString()}
+                      </span>
                     </div>
-                  ))}
+                    <p className="font-mono text-sm">{trainingScenarios[currentScenario].atcCall}</p>
+                  </div>
                 </div>
 
-                {/* Quick Responses */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  <Button variant="outline" size="sm" data-testid="button-roger">
-                    Roger
-                  </Button>
-                  <Button variant="outline" size="sm" data-testid="button-wilco">
-                    Wilco
-                  </Button>
-                  <Button variant="outline" size="sm" data-testid="button-standby">
-                    Standby
-                  </Button>
-                  <Button variant="outline" size="sm" data-testid="button-request">
-                    Request
-                  </Button>
+                {!scenarioComplete ? (
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Your Response:</label>
+                    <textarea
+                      value={userResponse}
+                      onChange={(e) => setUserResponse(e.target.value)}
+                      placeholder="Type your radio response here..."
+                      className="w-full p-3 border rounded-lg min-h-24 resize-none"
+                      data-testid="textarea-atc-response"
+                    />
+                    <Button 
+                      onClick={handleResponseSubmit}
+                      disabled={!userResponse.trim()}
+                      className="w-full"
+                      data-testid="button-submit-response"
+                    >
+                      Submit Response
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                      <h4 className="font-medium text-green-700 dark:text-green-400 mb-2">Correct Response:</h4>
+                      <p className="font-mono text-sm">{trainingScenarios[currentScenario].correctResponse}</p>
+                    </div>
+                    
+                    <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                      <h4 className="font-medium text-blue-700 dark:text-blue-400 mb-2">Explanation:</h4>
+                      <p className="text-sm">{trainingScenarios[currentScenario].explanation}</p>
+                    </div>
+
+                    <div className="flex space-x-2">
+                      {currentScenario < trainingScenarios.length - 1 ? (
+                        <Button onClick={nextScenario} className="flex-1" data-testid="button-next-scenario">
+                          Next Scenario
+                        </Button>
+                      ) : (
+                        <Button onClick={resetTraining} className="flex-1" data-testid="button-restart-training">
+                          Restart Training
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Progress & Tips Panel */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Training Progress</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <div className="text-3xl font-bold text-chart-5 mb-1">{score}</div>
+                  <div className="text-sm text-muted-foreground">Total Score</div>
                 </div>
 
-                {/* Custom Message Input */}
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Type custom message..."
-                    className="flex-1"
-                    data-testid="input-custom-message"
-                  />
-                  <Button data-testid="button-send-message">Send</Button>
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Key Points for this Scenario:</h4>
+                  <ul className="space-y-1">
+                    {trainingScenarios[currentScenario].hints.map((hint, index) => (
+                      <li key={index} className="text-sm text-muted-foreground flex items-center">
+                        <div className="w-1.5 h-1.5 bg-accent rounded-full mr-2"></div>
+                        {hint}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+
+                <div className="space-y-3 border-t pt-4">
+                  <h4 className="font-medium text-sm">Standard Phraseology Reminders:</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="p-2 bg-muted rounded">
+                      <strong>Always end with your callsign:</strong> "...PTFS001"
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <strong>Read back critical items:</strong> Runways, altitudes, headings
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <strong>Use standard terms:</strong> "Roger", "Wilco", "Unable"
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      <strong>Keep it concise:</strong> Clear and brief communications
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
