@@ -29,23 +29,29 @@ export const flights = pgTable("flights", {
   aircraftId: varchar("aircraft_id").references(() => aircraft.id),
   departureAirport: text("departure_airport").notNull(),
   arrivalAirport: text("arrival_airport").notNull(),
+  route: jsonb("route"), // flight plan waypoints
   status: text("status").notNull().default("planning"), // planning, boarding, departed, arrived
   scheduledDeparture: timestamp("scheduled_departure"),
   actualDeparture: timestamp("actual_departure"),
   passengerCount: integer("passenger_count").default(0),
+  cargoWeight: integer("cargo_weight").default(0),
   fuelData: jsonb("fuel_data"), // fuel levels, weight data
+  weatherConditions: jsonb("weather_conditions"),
+  pilotId: varchar("pilot_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const serviceRequests = pgTable("service_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   flightId: varchar("flight_id").references(() => flights.id),
-  serviceType: text("service_type").notNull(), // fuel, catering, baggage, ground_power
+  serviceType: text("service_type").notNull(), // fuel, catering, baggage, ground_power, pushback, cargo_door, jetbridge, deicing
   status: text("status").notNull().default("pending"), // pending, in_progress, completed, cancelled
   priority: text("priority").notNull().default("normal"), // low, normal, high, urgent
   requestedBy: text("requested_by").notNull(),
   assignedTo: text("assigned_to"),
   notes: text("notes"),
+  estimatedDuration: integer("estimated_duration"), // minutes
+  actualStartTime: timestamp("actual_start_time"),
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
 });
@@ -73,8 +79,10 @@ export const communications = pgTable("communications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   flightId: varchar("flight_id").references(() => flights.id),
   sender: text("sender").notNull(),
-  senderRole: text("sender_role").notNull(), // pilot, ground_control, catering, fuel, baggage
+  senderRole: text("sender_role").notNull(), // pilot, ground_crew, atc, fuel, catering, baggage
+  recipient: text("recipient"), // specific recipient or 'all'
   message: text("message").notNull(),
+  messageType: text("message_type").default("chat"), // chat, service_request, atc_help, checklist_update
   timestamp: timestamp("timestamp").defaultNow(),
   readBy: jsonb("read_by").default([]), // array of user IDs who have read the message
 });

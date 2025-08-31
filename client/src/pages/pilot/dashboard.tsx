@@ -10,14 +10,86 @@ import {
   LogOut,
   Radio,
   Gauge,
-  MapPin
+  MapPin,
+  Navigation,
+  Headphones
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useATC24 } from '@/hooks/use-atc24';
+import { FlightPlanSelector } from '@/components/flight-planning/FlightPlanSelector';
+import { PilotGroundChat } from '@/components/communications/PilotGroundChat';
+import { DynamicSeatingChart } from '@/components/seating/DynamicSeatingChart';
+import { ProfessionalChecklist } from '@/components/checklists/ProfessionalChecklist';
+import { ATCHelpSystem } from '@/components/atc/ATCHelpSystem';
 
 export function PilotDashboard() {
   const { user, logout } = useAuth();
   const { aircraftList, controllers } = useATC24();
+  const [activeView, setActiveView] = useState<'dashboard' | 'flight-plan' | 'chat' | 'seating' | 'checklist' | 'atc'>('dashboard');
+  const [selectedFlight, setSelectedFlight] = useState<any>(null);
+
+  const handleFlightSelection = (flight: any) => {
+    setSelectedFlight(flight);
+    setActiveView('dashboard');
+  };
+
+  if (activeView === 'flight-plan') {
+    return <FlightPlanSelector onSelectFlight={handleFlightSelection} />;
+  }
+
+  if (activeView === 'chat') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-6">
+        <div className="max-w-4xl mx-auto">
+          <PilotGroundChat flightId={selectedFlight?.id} />
+          <Button 
+            onClick={() => setActiveView('dashboard')}
+            className="mt-4 bg-blue-600 hover:bg-blue-700"
+            data-testid="button-back-to-dashboard"
+          >
+            Back to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeView === 'seating') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          <DynamicSeatingChart flightId={selectedFlight?.id} />
+          <Button 
+            onClick={() => setActiveView('dashboard')}
+            className="mt-4 bg-blue-600 hover:bg-blue-700"
+            data-testid="button-back-to-dashboard"
+          >
+            Back to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeView === 'checklist') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          <ProfessionalChecklist onBack={() => setActiveView('dashboard')} />
+        </div>
+      </div>
+    );
+  }
+
+  if (activeView === 'atc') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          <ATCHelpSystem onBack={() => setActiveView('dashboard')} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
@@ -97,17 +169,50 @@ export function PilotDashboard() {
               <CardTitle className="text-white">Flight Operations</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700" size="lg">
+              <Button 
+                onClick={() => setActiveView('flight-plan')}
+                className="w-full bg-cyan-600 hover:bg-cyan-700" 
+                size="lg"
+                data-testid="button-flight-plan"
+              >
+                <Navigation className="h-4 w-4 mr-2" />
+                Flight Planning
+              </Button>
+              <Button 
+                onClick={() => setActiveView('chat')}
+                className="w-full bg-blue-600 hover:bg-blue-700" 
+                size="lg"
+                data-testid="button-ground-chat"
+              >
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Contact Ground Crew
               </Button>
-              <Button className="w-full bg-green-600 hover:bg-green-700" size="lg">
+              <Button 
+                onClick={() => setActiveView('checklist')}
+                className="w-full bg-green-600 hover:bg-green-700" 
+                size="lg"
+                data-testid="button-checklist"
+              >
                 <ClipboardCheck className="h-4 w-4 mr-2" />
                 Pre-flight Checklist
               </Button>
-              <Button className="w-full bg-purple-600 hover:bg-purple-700" size="lg">
+              <Button 
+                onClick={() => setActiveView('seating')}
+                className="w-full bg-purple-600 hover:bg-purple-700" 
+                size="lg"
+                data-testid="button-seating"
+              >
                 <Users className="h-4 w-4 mr-2" />
-                Passenger Manifest
+                Passenger Seating
+              </Button>
+              <Button 
+                onClick={() => setActiveView('atc')}
+                className="w-full bg-orange-600 hover:bg-orange-700" 
+                size="lg"
+                data-testid="button-atc"
+              >
+                <Headphones className="h-4 w-4 mr-2" />
+                ATC Communications
               </Button>
             </CardContent>
           </Card>

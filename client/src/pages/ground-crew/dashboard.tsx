@@ -13,15 +13,47 @@ import {
   CheckCircle,
   AlertTriangle,
   Fuel,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Settings
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useATC24 } from '@/hooks/use-atc24';
+import { AircraftServiceInterface } from '@/components/ground-ops/AircraftServiceInterface';
+import { PilotGroundChat } from '@/components/communications/PilotGroundChat';
 
 export function GroundCrewDashboard() {
   const { user, logout } = useAuth();
   const { aircraftList } = useATC24();
   const [activeTab, setActiveTab] = useState('services');
+  const [activeView, setActiveView] = useState<'dashboard' | 'aircraft-service' | 'chat'>('dashboard');
+  const [selectedAircraft, setSelectedAircraft] = useState<any>(null);
+
+  if (activeView === 'aircraft-service') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-slate-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          <AircraftServiceInterface onBack={() => setActiveView('dashboard')} />
+        </div>
+      </div>
+    );
+  }
+
+  if (activeView === 'chat') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-slate-900 p-6">
+        <div className="max-w-4xl mx-auto">
+          <PilotGroundChat />
+          <Button 
+            onClick={() => setActiveView('dashboard')}
+            className="mt-4 bg-green-600 hover:bg-green-700"
+            data-testid="button-back-to-dashboard"
+          >
+            Back to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const groundedAircraft = aircraftList.filter(aircraft => aircraft.isOnGround);
   
@@ -147,7 +179,12 @@ export function GroundCrewDashboard() {
                       <p className="text-sm text-white">{service.eta}</p>
                       <p className="text-xs text-slate-400">ETA</p>
                     </div>
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => setActiveView('aircraft-service')}
+                      data-testid={`button-service-${service.id}`}
+                    >
                       {service.status === 'pending' ? 'Start' : service.status === 'in_progress' ? 'Complete' : 'View'}
                     </Button>
                   </div>
